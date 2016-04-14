@@ -1,0 +1,20 @@
+<%init>
+my $t = RT::Ticket->new($session{'CurrentUser'});
+$t->Load($TicketId);
+return unless $t && $t->Id;
+
+my $queue = new RT::Queue($session{'CurrentUser'});
+my @status = $queue->StatusArray();
+my $ret = '';
+foreach my $status (@status)  {
+        if( $status eq $t->Status){
+	    $ret .= "<span style=\"color:red;\"><b><u>".loc($status)."</u></b></span> ";
+	}else{
+	    $ret .= "<span class=\"status$status\" onclick=\"myFunctionSetStatus('".$status."',".$TicketId.", 'editStatus')\" style=\"cursor:pointer;color:black;\"><b>".loc($status)."</b></span> ";
+	}
+}
+$m->out($ret);
+</%init>
+<%args>
+$TicketId => undef
+</%args>

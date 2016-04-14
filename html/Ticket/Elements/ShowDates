@@ -1,0 +1,203 @@
+%# BEGIN BPS TAGGED BLOCK {{{
+%# 
+%# COPYRIGHT:
+%# 
+%# This software is Copyright (c) 1996-2009 Best Practical Solutions, LLC
+%#                                          <jesse@bestpractical.com>
+%# 
+%# (Except where explicitly superseded by other copyright notices)
+%# 
+%# 
+%# LICENSE:
+%# 
+%# This work is made available to you under the terms of Version 2 of
+%# the GNU General Public License. A copy of that license should have
+%# been provided with this software, but in any event can be snarfed
+%# from www.gnu.org.
+%# 
+%# This work is distributed in the hope that it will be useful, but
+%# WITHOUT ANY WARRANTY; without even the implied warranty of
+%# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+%# General Public License for more details.
+%# 
+%# You should have received a copy of the GNU General Public License
+%# along with this program; if not, write to the Free Software
+%# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+%# 02110-1301 or visit their web page on the internet at
+%# http://www.gnu.org/licenses/old-licenses/gpl-2.0.html.
+%# 
+%# 
+%# CONTRIBUTION SUBMISSION POLICY:
+%# 
+%# (The following paragraph is not intended to limit the rights granted
+%# to you to modify and distribute this software under the terms of
+%# the GNU General Public License and is only of importance to you if
+%# you choose to contribute your changes and enhancements to the
+%# community by submitting them to Best Practical Solutions, LLC.)
+%# 
+%# By intentionally submitting any modifications, corrections or
+%# derivatives to this work, or any other work intended for use with
+%# Request Tracker, to Best Practical Solutions, LLC, you confirm that
+%# you are the copyright holder for those contributions and you grant
+%# Best Practical Solutions,  LLC a nonexclusive, worldwide, irrevocable,
+%# royalty-free, perpetual, license to use, copy, create derivative
+%# works based on those contributions, and sublicense and distribute
+%# those contributions and any derivatives thereof.
+%# 
+%# END BPS TAGGED BLOCK }}}
+<table>
+  <tr>
+    <td class="label date created"><&|/l&>Created</&>:</td>
+    <td id="created1" class="value date created"><% $Ticket->CreatedObj->AsString %></td>
+  </tr>
+  <tr>
+    <td class="label date starts"><&|/l&>Starts</&>:</td>
+    <td id="starts" class="value date starts"><div class="showStarts"><% $Ticket->StartsObj->AsString %></div>
+    <div class="editStarts" style="display:none">
+    <& /Elements/SelectDate, menu_prefix => 'Starts', current => 0, Default => $Ticket->StartsObj->AsString &>
+    </div>
+    </td>
+    <td>
+        <span id="editStarts" style="right:0px;cursor:pointer;width:10px;hegith:10px;">
+        <img src="<%RT->Config->Get('WebPath')%>/NoAuth/images/pencil-icon.png" >
+        </span>
+    </td>
+  </tr>
+  <tr>
+    <td class="label date started"><&|/l&>Started</&>:</td>
+    <td id="started" class="value date started"><div class="showStarted"><% $Ticket->StartedObj->AsString %></div>
+    <div class="editStarted" style="display:none">
+    <& /Elements/SelectDate, menu_prefix => 'Started', current => 0, Default => $Ticket->StartedObj->AsString &>
+    </div>
+    </td>
+    <td>
+        <span id="editStarted" style="right:0px;cursor:pointer;width:10px;hegith:10px;">
+        <img src="<%RT->Config->Get('WebPath')%>/NoAuth/images/pencil-icon.png" >
+        </span>
+    </td>
+  </tr>
+  <tr>
+    <td class="label date told"><a href="<% RT->Config->Get('WebPath') %>/Ticket/Display.html?id=<% $Ticket->id %>&Action=SetTold"><&|/l&>Last Contact</&></a>:</td>
+    <td id="told" class="value date told"><div class="showTold"><% $Ticket->ToldObj->AsString %></div>
+    <div class="editTold" style="display:none">
+    <& /Elements/SelectDate, menu_prefix => 'Told', current => 0, Default => $Ticket->ToldObj->AsString &>
+    </div>
+    </td>
+    <td>
+        <span id="editTold" style="right:0px;cursor:pointer;width:10px;hegith:10px;">
+        <img src="<%RT->Config->Get('WebPath')%>/NoAuth/images/pencil-icon.png" >
+        </span>
+    </td>
+  </tr>
+  <tr>
+    <td class="label date due"><&|/l&>Due</&>:</td>
+    <td id="due" class="value date due">
+    
+% my $due = $Ticket->DueObj;
+% if ( $due && $due->Unix > 0 && $due->Diff < 0 ) {
+    <span class="overdue">
+% } 
+    <div class="showDue">
+    <% $due->AsString  %>
+    </div>
+    <div class="editDue" style="display:none">
+    <& /Elements/SelectDate, menu_prefix => 'Due', current => 0 , Default => $due->AsString&>
+    </div>
+% if ( $due && $due->Unix > 0 && $due->Diff < 0 ) {
+</span>
+% }
+    </td>
+    <td>
+        <span id="editDue" style="right:0px;cursor:pointer;width:10px;hegith:10px;">
+        <img src="<%RT->Config->Get('WebPath')%>/NoAuth/images/pencil-icon.png" >
+        </span>
+    </td>
+  </tr>
+  <tr>
+    <td class="label date resolved"><&|/l&>Closed</&>:</td>
+    <td id="resolved" class="value date resolved"><% $Ticket->ResolvedObj->AsString  %></td>
+
+  </tr>
+  <tr>
+    <td class="label date updated"><&|/l&>Updated</&>:</td>
+% my $UpdatedString = $Ticket->LastUpdated ? loc("[_1] by [_2]", $Ticket->LastUpdatedAsString, $Ticket->LastUpdatedByObj->Name) : loc("Never");
+% if ($UpdatedLink) {
+    <td id="updated" class="value date updated"><a href="#lasttrans"><% $UpdatedString | h %></a></td>
+% } else {
+    <td id="updated" class="value date updated"><% $UpdatedString | h %></td>
+% }
+
+  </tr>
+% $m->callback( %ARGS, CallbackName => 'EndOfList', TicketObj => $Ticket );
+</table>
+<script>
+var modify = 1;
+</script>
+% my @dateType = ("Due", "Told", "Started", "Starts");
+% for(my $i = 0; $i < @dateType; $i++){
+<script>
+
+jQuery("#edit<%$dateType[$i]%>").click(function(){
+    jQuery(".show<%$dateType[$i]%>").hide();
+    jQuery("#edit<%$dateType[$i]%>").hide();
+    jQuery(".edit<%$dateType[$i]%>").show();
+    jQuery("#<%$dateType[$i]%>_Date").focus();
+});
+jQuery("#<%$dateType[$i]%>_Date").focusout(function(){
+  if (modify){
+    var strdate = "";
+    if (jQuery("#ui-datepicker-div").css('display')){
+        strdate = jQuery("#ui-datepicker-div").css('display');
+    }
+    if (strdate.toString() == "block"){
+        setTimeout(function() {jQuery("#<%$dateType[$i]%>_Date").focus();},0);
+    }else{
+	var value = jQuery("#<%$dateType[$i]%>_Date").val();
+	if (typeof value != 'undefined'){
+	jQuery.ajax({
+            type: 'POST',
+            url: '<%RT->Config->Get('WebPath')%>/Ticket/Elements/AjaxEditDate',
+            data: {
+                'Value' : value,
+                'TicketId' : '<%$Ticket->Id%>',
+		'Type': '<%$dateType[$i]%>',
+            },
+            success:function(data){
+        	reg = /^OK.*/;
+        	if (reg.test([data].toString())){
+		//if ([data].toString() == "OK"){
+                    jQuery(".show<%$dateType[$i]%>").html(value);
+                }else{
+                    jQuery("#<%$dateType[$i]%>_Date").val("");
+                    alert([data].toString());
+                }
+	    }
+	});
+	}
+	jQuery(".show<%$dateType[$i]%>").show();
+	jQuery("#edit<%$dateType[$i]%>").show();
+	jQuery(".edit<%$dateType[$i]%>").hide();
+    }
+  }else{
+     modify = 1;
+  }
+});
+       
+jQuery("#<%$dateType[$i]%>_Date").keydown(function(e){
+   if (e.keyCode == 27 ){
+        modify = 0;
+        jQuery(".show<%$dateType[$i]%>").show();
+        jQuery("#edit<%$dateType[$i]%>").show();
+	jQuery(".edit<%$dateType[$i]%>").hide();
+   }
+});
+
+</script>
+% }
+<%ARGS>
+$Ticket => undef
+$UpdatedLink => 1
+</%ARGS>
+<%init>
+
+</%init>

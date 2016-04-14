@@ -1,0 +1,202 @@
+%# BEGIN BPS TAGGED BLOCK {{{
+%# 
+%# COPYRIGHT:
+%# 
+%# This software is Copyright (c) 1996-2009 Best Practical Solutions, LLC
+%#                                          <jesse@bestpractical.com>
+%# 
+%# (Except where explicitly superseded by other copyright notices)
+%# 
+%# 
+%# LICENSE:
+%# 
+%# This work is made available to you under the terms of Version 2 of
+%# the GNU General Public License. A copy of that license should have
+%# been provided with this software, but in any event can be snarfed
+%# from www.gnu.org.
+%# 
+%# This work is distributed in the hope that it will be useful, but
+%# WITHOUT ANY WARRANTY; without even the implied warranty of
+%# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+%# General Public License for more details.
+%# 
+%# You should have received a copy of the GNU General Public License
+%# along with this program; if not, write to the Free Software
+%# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+%# 02110-1301 or visit their web page on the internet at
+%# http://www.gnu.org/licenses/old-licenses/gpl-2.0.html.
+%# 
+%# 
+%# CONTRIBUTION SUBMISSION POLICY:
+%# 
+%# (The following paragraph is not intended to limit the rights granted
+%# to you to modify and distribute this software under the terms of
+%# the GNU General Public License and is only of importance to you if
+%# you choose to contribute your changes and enhancements to the
+%# community by submitting them to Best Practical Solutions, LLC.)
+%# 
+%# By intentionally submitting any modifications, corrections or
+%# derivatives to this work, or any other work intended for use with
+%# Request Tracker, to Best Practical Solutions, LLC, you confirm that
+%# you are the copyright holder for those contributions and you grant
+%# Best Practical Solutions,  LLC a nonexclusive, worldwide, irrevocable,
+%# royalty-free, perpetual, license to use, copy, create derivative
+%# works based on those contributions, and sublicense and distribute
+%# those contributions and any derivatives thereof.
+%# 
+%# END BPS TAGGED BLOCK }}}
+<table>
+  <tr>
+    <td class="label id"><&|/l&>Subject</&>:</td>
+    <td class="value id">
+    <table><tr><td>
+    <div class="showSubject"><% loc($Ticket->Subject) %></div>
+    <div class="editSubject" style="display:none">
+       <input type="text" name="Subject" id="Subject" value="<%$Ticket->Subject%>" size="50">
+    </div>
+    </td><td>
+    <span id="editSubject" style="right:0px;cursor:pointer;width:10px;hegith:10px;">
+        <img src="<%RT->Config->Get('WebPath')%>/NoAuth/images/pencil-icon.png" >
+    </span>
+    </td></tr></table>
+  </tr>
+  <tr>
+    <td class="label id"><&|/l&>Id</&>:</td>
+    <td class="value id"><%$Ticket->Id %></td>
+    
+  </tr>
+  <tr>
+    <td class="label status"><&|/l&>Status</&>:</td>
+    <td class="value status">
+<%perl>
+   my $queue = new RT::Queue($session{'CurrentUser'});
+   my @status = $queue->StatusArray();
+   my $ret = '<font size="-2"><dev id="editStatus">';
+   foreach my $status (@status)  {
+        if( $status eq $Ticket->Status){
+	    $ret .= "<span style=\"color:red;\"><b><u>".loc($status)."</u></b></span> ";	
+	}else{
+    	    $ret .= "<span class=\"status$status\" onclick=\"myFunctionSetStatus('".$status."',".$Ticket->Id.", 'editStatus')\" style=\"cursor:pointer;\"><b>".loc($status)."</b></span> ";
+	}
+   }
+   $ret .= '</dev></font>';
+   $m->out($ret);
+</%perl>
+    
+   </td></tr>
+% if ($Ticket->TimeEstimated) {
+  <tr>
+    <td class="label time estimated"><&|/l&>Estimated</&>:</td>
+    <td class="value time estimated"><& ShowTime, minutes => $Ticket->TimeEstimated &></td>
+  </tr>
+% }
+% if ($Ticket->TimeWorked) {
+  <tr>
+    <td class="label time worked"><&|/l&>Worked</&>:</td>
+    <td class="value time worked"><& ShowTime, minutes => $Ticket->TimeWorked &></td>
+  </tr>
+% }
+% if ($Ticket->TimeLeft) {
+  <tr>
+    <td class="label time left"><&|/l&>Left</&>:</td>
+    <td class="value time left"><& ShowTime, minutes => $Ticket->TimeLeft &></td>
+  </tr>
+% }
+  <tr>
+    <td class="label priority"><&|/l&>Priority</&>:</td>
+
+<td class="value priority">
+%#    <& ShowPriority, Ticket => $Ticket &>
+<%perl>
+  my @order = grep defined && length, RT->Config->Get('PriorityAsStringOrder');
+  $ret = '<font size="-2"><dev id="editPriority">';
+    foreach my $prio (@order)  {
+        if( RT->Config->Get('PriorityAsString')->{$prio} == $Ticket->Priority){
+	    $ret .= "<span style=\"color:red;\"><b><u>".loc($prio)."</u></b></span> ";	
+	}else{
+    	    $ret .= "<span class=\"priority$prio\" onclick=\"myFunctionSetPriority('".$prio."',".$Ticket->Id.", 'editPriority')\" style=\"cursor:pointer;\"><b>".loc($prio)."</b></span> ";
+	}
+    }
+  $ret .= '</dev></font>';
+  $m->out($ret);
+</%perl>
+</td></tr>
+  <tr>
+    <td class="label queue"><&|/l&>Queue</&>:</td>
+    <td class="value queue"><table><tr><td>
+     <div class="showQueue_inp"><& ShowQueue, QueueObj => $Ticket->QueueObj &></div>
+     <div class="editQueue_inp" style="display:none">
+       <input type="text" name="Queue_inp" id="Queue_inp" value="<%$Ticket->QueueObj->Name%>" size="50">
+     </div>
+     </td><td>
+     <span id="editQueue_inp" style="right:0px;cursor:pointer;width:10px;hegith:10px;">
+        <img src="<%RT->Config->Get('WebPath')%>/NoAuth/images/pencil-icon.png" >
+     </span>
+     </td></tr></table>
+    </td>
+  </tr>
+% $m->callback( %ARGS, CallbackName => 'EndOfList', TicketObj => $Ticket );
+</table>
+<script>
+var modify = 1;
+</script>
+% my @basicType = ("Queue_inp", "Subject");
+% for(my $i = 0; $i < @basicType; $i++){
+<script>
+
+jQuery("#edit<%$basicType[$i]%>").click(function(){
+    jQuery(".show<%$basicType[$i]%>").hide();
+    jQuery("#edit<%$basicType[$i]%>").hide();
+    jQuery(".edit<%$basicType[$i]%>").show();
+    jQuery("#<%$basicType[$i]%>").focus();
+});
+jQuery("#<%$basicType[$i]%>").focusout(function(){
+  if (modify){
+    var value = jQuery(this).val();
+    jQuery.ajax({
+            type: 'POST',
+            url: '<%RT->Config->Get('WebPath')%>/Elements/AjaxEditTicketBasic',
+            data: {
+                'Value' : value,
+                'TicketId' : '<%$Ticket->Id%>',
+		'Field': '<%$basicType[$i]%>',
+            },
+            success:function(data){
+		if (/^OK.*/.test([data].toString())){
+		   if ("<%$basicType[$i]%>" == "Status"){
+                    jQuery(".show<%$basicType[$i]%>").load('<%RT->Config->Get('WebPath')%>/Ticket/Elements/UpdateStatus',{'Val' : value});
+		   }else{
+		    location.href = "<%RT->Config->Get('WebPath')%>/Ticket/Display.html?id=<%$Ticket->Id%>";
+		   }
+                }else{
+                    jQuery("#<%$basicType[$i]%>").val("");
+                    var str = [data].toString().replace(/\<\/div\>/,'');
+                    
+                    if (str.length > 1){
+                	alert(str);
+            	    }
+                }
+        }
+    });
+    jQuery(".show<%$basicType[$i]%>").show();
+    jQuery("#edit<%$basicType[$i]%>").show();
+    jQuery(".edit<%$basicType[$i]%>").hide();
+  }else{
+    modify = 1;
+  }
+});
+
+jQuery("#<%$basicType[$i]%>").keydown(function(e){
+    if (e.keyCode == 27 ){
+	modify = 0;
+	jQuery(".show<%$basicType[$i]%>").show();
+        jQuery("#edit<%$basicType[$i]%>").show();
+	jQuery(".edit<%$basicType[$i]%>").hide();
+    }
+});
+</script>
+% }
+
+<%ARGS>
+$Ticket => undef
+</%ARGS>

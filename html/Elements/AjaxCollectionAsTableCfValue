@@ -1,0 +1,23 @@
+%    if ($count == 1){
+<% $Ticket->FirstCustomFieldValueSpecial($CustomFieldId)|n%>
+%    }elsif($count > 1){
+<ul>
+%	while (my $Value = $Values->Next ){
+<li>
+<%$Value->Content|n%>
+</li>
+%       }
+</ul>
+%    }
+<%init>
+return unless $CustomFieldId && $TicketId;
+my $Ticket = RT::Ticket->new($RT::SystemUser);
+$Ticket->Load($TicketId);
+return unless $Ticket && $Ticket->Id;
+my $Values = $Ticket->CustomFieldValues($CustomFieldId);
+my $count = $Values->Count;
+</%init>
+<%args>
+$CustomFieldId => undef
+$TicketId => undef
+</%args>

@@ -1,0 +1,46 @@
+<%init>
+#$RT::Logger->debug("kalap, ertekek  0 : ".$ARGS{'CustomFieldId'}."   ".$ARGS{'Value'}."    ".$ARGS{'TicketId'});
+return unless ($ARGS{'CustomFieldId'} && $ARGS{'TicketId'});
+
+my $t = RT::Ticket->new($session{'CurrentUser'}); 
+$t->Load($ARGS{TicketId});
+use CGI;
+my $p=new CGI;
+if ($t && $t->Id){
+    my $CustomField = RT::CustomField->new($RT::SystemUser);
+    $CustomField->Load($ARGS{'CustomFieldId'});
+    my ( $val, $msg );
+    if ($ARGS{'Array'} || !$ARGS{'Value'}){
+	my $cf_values = $t->CustomFieldValues($ARGS{'CustomFieldId'});
+	my %values_hash;
+	while($ARGS{'Value'} =~ m/#([^#]+)/g){
+	    if (my $entry = $cf_values->HasEntry($1) ) {
+		$values_hash{ $entry->id } = 1;
+	        next;
+	    }
+	    ( $val, $msg ) = $t->AddCustomFieldValue(Field => $ARGS{'CustomFieldId'},Value => $1);
+	    $values_hash{$val} = 1 if $val;
+	}
+	$cf_values->RedoSearch;
+	while ( my $cf_value = $cf_values->Next ) {
+	    next if $values_hash{ $cf_value->id };
+				    
+	    my ( $val, $msg ) = $t->DeleteCustomFieldValue(
+	        Field   => $ARGS{'CustomFieldId'},
+	        ValueId => $cf_value->id
+	    );
+	}
+    }else{
+	if ($ARGS{'Value'}){
+	    ( $val, $msg ) = $t->AddCustomFieldValue(Field => $ARGS{'CustomFieldId'},Value => $ARGS{'Value'});
+	}
+    }
+    if ( ($t->FirstCustomFieldValue($ARGS{'CustomFieldId'}) eq $ARGS{'Value'}) || $ARGS{'Array'} ){
+        print $p->header(-type=>"text/plain", -Access_Control_Allow_Origin=>"*", -charset => 'utf-8')."OK";
+    }else{
+	print $p->header(-type=>"text/plain", -Access_Control_Allow_Origin=>"*", -charset => 'utf-8').$msg;
+    }
+#    $RT::Logger->debug("kalap, vegeredmeny: ".$t->FirstCustomFieldValue($ARGS{'CustomFieldId'}));
+}
+
+</%init>

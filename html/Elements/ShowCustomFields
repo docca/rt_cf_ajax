@@ -1,0 +1,347 @@
+%# BEGIN BPS TAGGED BLOCK {{{
+%# 
+%# COPYRIGHT:
+%# 
+%# This software is Copyright (c) 1996-2009 Best Practical Solutions, LLC
+%#                                          <jesse@bestpractical.com>
+%# 
+%# (Except where explicitly superseded by other copyright notices)
+%# 
+%# 
+%# LICENSE:
+%# 
+%# This work is made available to you under the terms of Version 2 of
+%# the GNU General Public License. A copy of that license should have
+%# been provided with this software, but in any event can be snarfed
+%# from www.gnu.org.
+%# 
+%# This work is distributed in the hope that it will be useful, but
+%# WITHOUT ANY WARRANTY; without even the implied warranty of
+%# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+%# General Public License for more details.
+%# 
+%# You should have received a copy of the GNU General Public License
+%# along with this program; if not, write to the Free Software
+%# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+%# 02110-1301 or visit their web page on the internet at
+%# http://www.gnu.org/licenses/old-licenses/gpl-2.0.html.
+%# 
+%# 
+%# CONTRIBUTION SUBMISSION POLICY:
+%# 
+%# (The following paragraph is not intended to limit the rights granted
+%# to you to modify and distribute this software under the terms of
+%# the GNU General Public License and is only of importance to you if
+%# you choose to contribute your changes and enhancements to the
+%# community by submitting them to Best Practical Solutions, LLC.)
+%# 
+%# By intentionally submitting any modifications, corrections or
+%# derivatives to this work, or any other work intended for use with
+%# Request Tracker, to Best Practical Solutions, LLC, you confirm that
+%# you are the copyright holder for those contributions and you grant
+%# Best Practical Solutions,  LLC a nonexclusive, worldwide, irrevocable,
+%# royalty-free, perpetual, license to use, copy, create derivative
+%# works based on those contributions, and sublicense and distribute
+%# those contributions and any derivatives thereof.
+%# 
+%# END BPS TAGGED BLOCK }}}
+% $m->callback( CallbackName => 'BeforeCustomFields' );
+% if ($Table) {
+<table>
+% }
+<input type="hidden" Name="hiddenValue" class="hiddenValue" value="" >
+<input type="hidden" Name="hiddenAutocomplete" class="hiddenAutocomplete" value="0" >
+<input type="hidden" Name="hiddenCombobox" class="hiddenCombobox" value="0" >
+% my $tab = 0;
+% while ( my $CustomField = $CustomFields->Next ) {
+%# unless ($CustomField->Type eq "Autocomplete" && $CustomField->MaxValues != 1){
+% if ($CustomField->CurrentUserHasRight('ModifyCustomField') && !($CustomField->Type eq "Autocomplete" && $CustomField->MaxValues != 1 ) && $CustomField->LookupType !~ /Transaction/ && $CustomField->Type ne "Binary" && $CustomField->Description !~ /;#Hidden$/){
+% push @customfieldIdArray, $CustomField->Id;
+% push @customfieldTypeArray, $CustomField->Type;
+% }
+
+% my $Values = $Object->CustomFieldValues( $CustomField->Id );
+% my $count = $Values->Count;
+  <tr id="CF-<%$CustomField->id%>-ShowRow">
+    
+    <td class="label"><% $CustomField->Name %>:</td>
+    <td class="value">
+
+<div id="showValue-<%$CustomField->id%>">
+% if ($CustomField->Description =~ /;#Hidden$/){
+<label id="viewCfValue-<%$CustomField->id%>-<%$Object->Id%>" onclick="viewCfValue(<%$CustomField->id%>, <%$Object->Id%>, '<%$session{'CurrentUser'}->Name%>', <%$session{'CurrentUser'}->Id%>, <%RT->Config->Get('CfHiddenTime')%>, 0)" style="cursor:pointer;"><i><&|/l&>View</&></i></label>
+% }else{
+
+% 	unless ( $count ) {
+%# <i><&|/l&>(no value)</&></i>
+% 	} elsif ( $count == 1 ) {
+%   $print_value->( $CustomField, $Values->First );
+% 	} else {
+<ul>
+% 	  while ( my $Value = $Values->Next ) {
+<li>
+
+% $print_value->( $CustomField, $Value );
+</li>
+% 	  }
+</ul>
+% 	}
+% }
+    </div>
+    <div class="modifyValue-<%$CustomField->id%>" style="display:none">
+
+% if ($CustomField->FriendlyPattern eq '[Datum]'){
+<& /Elements/EditCustomField,
+  Rows => 1,
+  Object => $Object,
+  CustomField => $CustomField,
+  NamePrefix => undef,
+  Default => undef,
+  Date => 1
+&>
+% }elsif ($CustomField->Type eq "Combobox"){
+<& /Elements/EditCustomField,
+  Rows => 5,
+  Object => $Object,
+  CustomField => $CustomField,
+  NamePrefix => "Ticket-",
+  Default => undef
+&>
+% }else{
+<& /Elements/EditCustomField,
+  Rows => 1,
+  Object => $Object,
+  CustomField => $CustomField,
+  NamePrefix => undef,
+  Default => undef,
+&>
+% }
+    </td>
+    <td id="editValue-<%$CustomField->id%>">
+% if ($CustomField->CurrentUserHasRight('ModifyCustomField') && !($CustomField->Type eq "Autocomplete" && $CustomField->MaxValues != 1 ) && $CustomField->LookupType !~ /Transaction/ && $CustomField->Description !~ /;#Hidden$/ && $CustomField->Type ne "Binary"){
+    <span id="edit-<%$CustomField->id%>" style="right:0px;cursor:pointer;width:10px;hegith:10px;">
+        <img src="<%RT->Config->Get('WebPath')%>/NoAuth/images/pencil-icon.png" >
+    </span>    
+% }
+</td>
+  </tr>
+%  if ($CustomField->id == 1 && $Object && $Object->FirstCustomFieldValue(1)){
+
+% my $Tickets = RT::Tickets->new($RT::SystemUser);
+% $Tickets->FromSQL("Queue = 53 AND (Status = 'new' OR Status = 'open' OR Status = 'stalled') AND Subject LIKE '".$Object->FirstCustomFieldValue(1)."'");
+% my $Ticket = $Tickets->First;   
+% if ($Ticket && $Ticket->FirstCustomFieldValue(277)){
+<tr><td></td><td><span class="showValue"><%$Ticket->FirstCustomFieldValue(277)|n%></span></td><td></td></tr>
+% }
+%  }
+% }
+% if ($Table) {
+</table>
+% }
+% $m->callback( CallbackName => 'AfterCustomFields', Object => $Object );
+<script>
+var modify = 1;
+</script>
+% for(my $i = 0; $i < @customfieldIdArray; $i++){
+<script>
+jQuery("#editValue-<%$customfieldIdArray[$i]%>").click(function(){
+	jQuery("#showValue-<%$customfieldIdArray[$i]%>").hide();
+	jQuery("#edit-<%$customfieldIdArray[$i]%>").hide();
+	jQuery(".modifyValue-<%$customfieldIdArray[$i]%>").show();
+	jQuery(".CF-<%$customfieldIdArray[$i]%>-Edit").focus();
+%	my $cf = RT::CustomField->new($RT::SystemUser);
+%	$cf->Load($customfieldIdArray[$i]);
+%	if ( $cf->Type eq "Autocomplete"){
+	    jQuery(".hiddenAutocomplete").val(1);	    
+%	}
+});
+
+jQuery(".combo-button").click(function(){
+    jQuery(".hiddenCombobox").val(1);
+});
+
+jQuery(".modifyValue-<%$customfieldIdArray[$i]%>").focusout(function(){
+ if (modify){
+    var strdate = "";
+    if (jQuery("#ui-datepicker-div").css('display')){
+	strdate = jQuery("#ui-datepicker-div").css('display');
+    }
+    
+  if (strdate.toString() == "block"){
+    setTimeout(function() {jQuery(".CF-<%$customfieldIdArray[$i]%>-Edit").focus();}, 0);
+  }else if (jQuery(".hiddenAutocomplete").val() == 1){
+    setTimeout(function() {jQuery(".CF-<%$customfieldIdArray[$i]%>-Edit").focus();}, 0);
+    jQuery(".hiddenAutocomplete").val(0);
+
+  }else if (jQuery(".hiddenCombobox").val() == 1){
+      jQuery(".hiddenCombobox").val(0);
+
+  }else if (strdate.toString() == "none" || strdate.toString() == ""){
+	var value = "";
+	var array = 0;
+%       my $cf1 = RT::CustomField->new($RT::SystemUser);
+%       $cf1->Load($customfieldIdArray[$i]);
+%       if ( $cf1->Type ne "Combobox"){
+            if (jQuery(".CF-<%$customfieldIdArray[$i]%>-Edit").val() != "")
+                value = jQuery(".CF-<%$customfieldIdArray[$i]%>-Edit").val();
+%       }else{
+            if (jQuery("#Ticket-<%$customfieldIdArray[$i]%>-Value").val())
+                value = jQuery("#Ticket-<%$customfieldIdArray[$i]%>-Value").val();
+%       }
+
+	reg = /Array/;
+	if (reg.test(value.constructor)){
+    	    array = 1;
+    	    var string = "";
+    	    for (var i = 0; i < value.length;i++){
+	        if (value[i].length > 0){
+	    	    if (string == ""){
+	    		string = "#" + value[i];
+		    }else{
+			string = string + "#" + value[i];
+		    }
+		}
+	    }
+	    value = string;	    
+	}
+
+	    jQuery.ajax({
+    		type: 'POST',
+		url: '<%RT->Config->Get('WebPath')%>/Elements/AjaxEditCustomField',
+		data: {
+		    'CustomFieldId' : '<%$customfieldIdArray[$i]%>',
+		    'Value' : value,
+		    'TicketId' : '<%$Object->Id%>',
+		    'Array' : array,
+		},
+    		success:function(data){
+		    //    console.log("focusout + success : "+ [data].toString());
+		    reg = /^OK.*/;
+		    if (reg.test([data].toString())){
+		    //if ([data].toString() == "OK"){
+			jQuery("#showValue-<%$customfieldIdArray[$i]%>").load('<%RT->Config->Get('WebPath')%>/Elements/ShowCustomFieldUpdate',{'CustomFieldId':<%$customfieldIdArray[$i]%>,'TicketId':<%$Object->Id%>});
+		    }else{
+			
+			jQuery(".CF-<%$customfieldIdArray[$i]%>-Edit").val("");
+			alert([data].toString().replace(/\<\/div\>/,''));
+		    }
+		}
+	    });	
+	//Minden esetben le kell futnia a focus elhagyásnál a modify eltünésnek
+	jQuery(".modifyValue-<%$customfieldIdArray[$i]%>").hide();
+	jQuery("#showValue-<%$customfieldIdArray[$i]%>").show();
+	jQuery("#edit-<%$customfieldIdArray[$i]%>").show();
+    }
+ }else{
+   modify = 1;
+ }
+});
+
+jQuery(".modifyValue-<%$customfieldIdArray[$i]%>").keydown(function(e){
+    if (e.keyCode == 9){
+	if(e.shiftKey){
+% 	    if (($i - 1) >= 0){ 
+		e.preventDefault();
+		jQuery("#showValue-<%$customfieldIdArray[$i - 1]%>").hide();
+		jQuery("#edit-<%$customfieldIdArray[$i - 1]%>").hide();
+		jQuery(".modifyValue-<%$customfieldIdArray[$i - 1]%>").show();
+		jQuery(".CF-<%$customfieldIdArray[$i - 1]%>-Edit").focus();
+%		my $cf = RT::CustomField->new($RT::SystemUser);
+%		$cf->Load($customfieldIdArray[$i - 1]);
+%		if ($cf->Type eq "Autocomplete"){
+		    jQuery(".hiddenAutocomplete").val(1);	    
+%		}
+%	    }
+	}else{	             
+% 	    if (($i + 1) < @customfieldIdArray){ 
+		e.preventDefault();
+		jQuery("#showValue-<%$customfieldIdArray[$i + 1]%>").hide();
+		jQuery("#edit-<%$customfieldIdArray[$i + 1]%>").hide();
+		jQuery(".modifyValue-<%$customfieldIdArray[$i + 1]%>").show();
+		jQuery(".CF-<%$customfieldIdArray[$i + 1]%>-Edit").focus();
+%		my $cf = RT::CustomField->new($RT::SystemUser);
+%		$cf->Load($customfieldIdArray[$i + 1]);
+%		if ($cf->Type eq "Autocomplete"){
+		    jQuery(".hiddenAutocomplete").val(1);	    
+%		}
+% 	    }	
+	}
+
+    }else if (e.keyCode == 13){
+	//jQuery(".CF-<%$customfieldIdArray[$i]%>-Edit").focusout();
+    }else if (e.keyCode == 27 ){
+	modify = 0;
+	jQuery(".modifyValue-<%$customfieldIdArray[$i]%>").hide();
+	jQuery("#showValue-<%$customfieldIdArray[$i]%>").show();
+	jQuery("#edit-<%$customfieldIdArray[$i]%>").show();
+    }
+});
+% if ($customfieldTypeArray[$i] !~ /text/i){
+jQuery(".modifyValue-<%$customfieldIdArray[$i]%>").keypress(function(e) {
+    if(e.which == 13) {
+	jQuery(".modifyValue-<%$customfieldIdArray[$i]%>").focusout();
+    }else if (e.which == 27 ){
+	modify = 0;
+	jQuery(".modifyValue-<%$customfieldIdArray[$i]%>").hide();
+	jQuery("#showValue-<%$customfieldIdArray[$i]%>").show();
+	jQuery("#edit-<%$customfieldIdArray[$i]%>").show();
+    }
+});
+% }
+
+</script>
+%}
+
+<%INIT>
+$m->callback(
+    CallbackName => 'MassageCustomFields',
+    Object => $Object,
+    CustomFields => $CustomFields,
+);
+
+my @customfieldIdArray;
+my @customfieldTypeArray;
+
+my $print_value = sub {
+    my ($cf, $value) = @_;
+
+    my $linked = $value->LinkValueTo;
+    if ( defined $linked && length $linked ) {
+        my $linked = $m->interp->apply_escapes( $linked, 'h' );
+        $m->out('<a href="'. $linked .'" target="_new">');
+    }
+    my $comp = "ShowCustomField". $cf->Type;
+    $m->callback(
+        CallbackName => 'ShowComponentName',
+        Name         => \$comp,
+        CustomField  => $cf,
+        Object       => $Object,
+    );
+    if ( $m->comp_exists( $comp ) ) {
+        $m->comp( $comp, Object => $value );
+    } else {
+
+        $m->out( $m->interp->apply_escapes( $value->Content, 'h' ) );
+    }
+    $m->out('</a>') if defined $linked && length $linked;
+
+    # This section automatically populates a div with the "IncludeContentForValue" for this custom
+    # field if it's been defined
+    if ( $cf->IncludeContentForValue ) {
+       my $vid = $value->id;
+       $m->out(   '<div class="object_cf_value_include" id="object_cf_value_'. $vid .'">' );
+       $m->print( loc("See also:") );
+       $m->out(   '<a href="'. $value->IncludeContentForValue .'">' );
+       $m->print( $value->IncludeContentForValue );
+       $m->out(   qq{</a></div>\n} );
+       $m->out(   qq{<script><!--\nahah('} );
+       $m->print( $value->IncludeContentForValue );
+       $m->out(   qq{', 'object_cf_value_$vid');\n--></script>\n} );
+    }
+};
+</%INIT>
+<%ARGS>
+$Object => undef
+$CustomFields => $Object->CustomFields
+$Table => 1
+</%ARGS>

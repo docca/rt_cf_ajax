@@ -1,0 +1,139 @@
+%# BEGIN BPS TAGGED BLOCK {{{
+%# 
+%# COPYRIGHT:
+%# 
+%# This software is Copyright (c) 1996-2009 Best Practical Solutions, LLC
+%#                                          <jesse@bestpractical.com>
+%# 
+%# (Except where explicitly superseded by other copyright notices)
+%# 
+%# 
+%# LICENSE:
+%# 
+%# This work is made available to you under the terms of Version 2 of
+%# the GNU General Public License. A copy of that license should have
+%# been provided with this software, but in any event can be snarfed
+%# from www.gnu.org.
+%# 
+%# This work is distributed in the hope that it will be useful, but
+%# WITHOUT ANY WARRANTY; without even the implied warranty of
+%# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+%# General Public License for more details.
+%# 
+%# You should have received a copy of the GNU General Public License
+%# along with this program; if not, write to the Free Software
+%# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+%# 02110-1301 or visit their web page on the internet at
+%# http://www.gnu.org/licenses/old-licenses/gpl-2.0.html.
+%# 
+%# 
+%# CONTRIBUTION SUBMISSION POLICY:
+%# 
+%# (The following paragraph is not intended to limit the rights granted
+%# to you to modify and distribute this software under the terms of
+%# the GNU General Public License and is only of importance to you if
+%# you choose to contribute your changes and enhancements to the
+%# community by submitting them to Best Practical Solutions, LLC.)
+%# 
+%# By intentionally submitting any modifications, corrections or
+%# derivatives to this work, or any other work intended for use with
+%# Request Tracker, to Best Practical Solutions, LLC, you confirm that
+%# you are the copyright holder for those contributions and you grant
+%# Best Practical Solutions,  LLC a nonexclusive, worldwide, irrevocable,
+%# royalty-free, perpetual, license to use, copy, create derivative
+%# works based on those contributions, and sublicense and distribute
+%# those contributions and any derivatives thereof.
+%# 
+%# END BPS TAGGED BLOCK }}}
+<table>
+  <tr>
+    <td class="label"><&|/l&>Owner</&>:</td>
+% my $owner = $Ticket->OwnerObj;
+    <td class="value">
+    <table><tr><td>
+    <div class="showOwner_inp">
+<& /Elements/ShowUser, User => $owner, Ticket => $Ticket &>
+    <& /Elements/ShowUserEmailFrequency, User => $owner, Ticket => $Ticket &>
+% $m->callback( User => $owner, Ticket => $Ticket, %ARGS, CallbackName => 'AboutThisUser' );
+    </div>
+    <div class="editOwner_inp" style="display:none">
+       <input type="text" name="Owner_inp" id="Owner_inp" value="<%$Ticket->OwnerObj->Name%>">
+    </div>
+    </td><td>
+    <span id="editOwner_inp" style="right:0px;cursor:pointer;width:10px;hegith:10px;">
+        <img src="<%RT->Config->Get('WebPath')%>/NoAuth/images/pencil-icon.png" >
+    </span>
+    </td></tr></table>
+  </tr>
+  <tr>
+    <td class="labeltop"><&|/l&>Requestors</&>:</td>
+    <td class="value"><& ShowGroupMembers, Group => $Ticket->Requestors, Ticket => $Ticket &></td>
+  </tr>
+%#  <tr>
+%#    <td class="labeltop"><&|/l&>Cc</&>:</td>
+%#    <td class="value"><& ShowGroupMembers, Group => $Ticket->Cc, Ticket => $Ticket &></td>
+%#  </tr>
+  <tr>
+    <td class="labeltop"><&|/l&>AdminCc</&>:</td>
+    <td class="value"><& ShowGroupMembers, Group => $Ticket->AdminCc, Ticket => $Ticket &></td>
+  </tr>
+</table>
+<script>
+var modify = 1;
+</script>
+% my @basicType = ("Owner_inp");
+% for(my $i = 0; $i < @basicType; $i++){
+<script>
+
+jQuery("#edit<%$basicType[$i]%>").click(function(){
+    jQuery(".show<%$basicType[$i]%>").hide();
+    jQuery("#edit<%$basicType[$i]%>").hide();
+    jQuery(".edit<%$basicType[$i]%>").show();
+    jQuery("#<%$basicType[$i]%>").focus();
+});
+jQuery("#<%$basicType[$i]%>").focusout(function(){
+  if (modify){
+    var value = jQuery(this).val();
+    jQuery.ajax({
+            type: 'POST',
+            url: '<%RT->Config->Get('WebPath')%>/Elements/AjaxEditTicketBasic',
+            data: {
+                'Value' : value,
+                'TicketId' : '<%$Ticket->Id%>',
+		'Field': '<%$basicType[$i]%>',
+            },
+            success:function(data){
+		if (/^OK.*/.test([data].toString())){
+         		location.href = "<%RT->Config->Get('WebPath')%>/Ticket/Display.html?id=<%$Ticket->Id%>";
+                }else{
+                    jQuery("#<%$basicType[$i]%>").val("");
+                    var str = [data].toString().replace(/\<\/div\>/,'');
+                    if (str.length > 1){
+                	alert(str);
+                    }
+                }
+        }
+    });
+    jQuery(".show<%$basicType[$i]%>").show();
+    jQuery("#edit<%$basicType[$i]%>").show();
+    jQuery(".edit<%$basicType[$i]%>").hide();
+  }else{
+    modify = 1;
+  }
+});
+      
+jQuery("#<%$basicType[$i]%>").keydown(function(e){
+  if (e.keyCode == 27 ){
+    modify = 0;
+    jQuery(".show<%$basicType[$i]%>").show();
+    jQuery("#edit<%$basicType[$i]%>").show();
+    jQuery(".edit<%$basicType[$i]%>").hide();
+  }
+});
+</script>
+% }
+<%INIT>
+</%INIT>
+<%ARGS>
+$Ticket => undef
+</%ARGS>

@@ -1,0 +1,20 @@
+
+<%init>
+my $t = RT::Ticket->new($session{'CurrentUser'});
+$t->Load($TicketId);
+return unless $t && $t->Id;
+
+my @order = grep defined && length, RT->Config->Get('PriorityAsStringOrder');
+my $ret = '';
+foreach my $prio (@order)  {
+        if( RT->Config->Get('PriorityAsString')->{$prio} == $t->Priority){
+	    $ret .= "<span style=\"color:red;\"><b><u>".loc($prio)."</u></b></span> ";
+	}else{
+	    $ret .= "<span class=\"priority$prio\" onclick=\"myFunctionSetPriority('".$prio."',".$TicketId.", 'editPriority')\" style=\"cursor:pointer;\"><b>".loc($prio)."</b></span> ";
+	}
+}
+$m->out($ret);
+</%init>
+<%args>
+$TicketId => undef
+</%args>

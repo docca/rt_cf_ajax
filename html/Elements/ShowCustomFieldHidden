@@ -1,0 +1,16 @@
+<label id="viewCfValue-<%$CustomField->id%>-<%$TicketId%>" onclick="viewCfValue(<%$CustomFieldId%>, <%$TicketId%>, '<%$session{'CurrentUser'}->Name%>', <%$session{'CurrentUser'}->Id%>, <%RT->Config->Get('CfHiddenTime')%>, <%$PlusId%>)" style="cursor:pointer;"><i><&|/l&>View</&></i></label>
+<%init>
+return unless ($CustomFieldId && $TicketId);
+
+my $t = RT::Ticket->new($RT::SystemUser);
+$t->Load($TicketId);
+my $CustomField = RT::CustomField->new($RT::SystemUser);
+$CustomField->Load($CustomFieldId);
+return unless ($t && $t->Id && $CustomField && $CustomField->Id);
+</%init>
+<%args>
+$CustomFieldId => undef
+$TicketId => undef
+$PlusId => undef
+</%args>
+

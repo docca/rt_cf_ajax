@@ -1,0 +1,32 @@
+% my $name = $NamePrefix . $CustomField->Id . '-Value';
+<input type="hidden" class="hidden" name="AddLeadingEndingZeros-<%$name%>" value="1" />
+<input name="<%$name%>" id="<%$name%>" class="CF-<%$CustomField->id%>-Edit-<%$Object->Id%>" value="<% defined($Default) ? $Default : ''%>" />
+<script>
+% if (RT->Config->Get("EditDecimalCFWithThousandSeparator")){
+jQuery(".CF-<%$CustomField->id%>-Edit").on('input', function(e){
+    if (jQuery(this).data("lastval") != jQuery(this).val()){
+	var oldStr = jQuery(this).val();
+	oldStr = oldStr.replace(/\s/g, "");
+	var newStr = oldStr.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+	jQuery(this).val(newStr);
+	jQuery(this).data("lastval", jQuery(this).val());
+    }
+});
+% }
+</script>
+<%init>
+if($Default) {
+  $Default =~ s/^(-?)0+/$1/g;
+  $Default =~ s/(\.[1-9]*)0+$/$1/g;
+  $Default =~ s/\.$//g;
+  $Default =~ s/(\d{1,3}?)(?=(\d{3})+$)/$1 /g if (RT->Config->Get("EditDecimalCFWithThousandSeparator"));
+}
+
+return unless $Object && $Object->Id;
+</%init>
+<%args>
+$CustomField => undef
+$NamePrefix => undef
+$Default => undef
+$Object => undef
+</%args>

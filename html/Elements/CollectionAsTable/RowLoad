@@ -1,0 +1,43 @@
+% if ($CustomField->FriendlyPattern eq '[Datum]'){
+% $RT::Logger->debug("kalap, datum");
+<& /Elements/EditCustomFieldRow,
+  Rows => 1,
+  Object => $Object,
+  CustomField => $CustomField,
+  NamePrefix => undef,
+  Default => undef,
+  Date => 1
+&>
+% }elsif ($CustomField->Type eq "Combobox"){
+<& /Elements/EditCustomFieldRow,
+  Rows => 5,
+  Object => $Object,
+  CustomField => $CustomField,
+  NamePrefix => "Ticket-",
+  Default => undef
+&>
+% }else{
+<& /Elements/EditCustomFieldRow,
+  Rows => 1,
+  Object => $Object,
+  CustomField => $CustomField,
+  NamePrefix => undef,
+  Default => undef,
+&>
+% }
+<script>
+jQuery("#ShowCfs-<%$Cf%>-TicketId-<%$Ticket%>").focus();
+</script>
+<%init>
+my $Object = RT::Ticket->new($RT::SystemUser);
+$Object->Load($Ticket);
+return unless $Object && $Object->Id;
+my $CustomField = RT::CustomField->new($RT::SystemUser);
+$CustomField->Load($Cf);
+return unless $CustomField && $CustomField->Id;
+
+</%init>
+<%args>
+$Cf => undef
+$Ticket => undef
+</%args>

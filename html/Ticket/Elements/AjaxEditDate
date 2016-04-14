@@ -1,0 +1,36 @@
+<%init>
+return unless ($ARGS{'TicketId'} && $ARGS{'Type'});
+
+my $t = RT::Ticket->new($session{'CurrentUser'});
+$t->Load($ARGS{TicketId});
+my ($ret, $msg) = (0, "");
+if ($t && $t->Id){
+
+    my $DateObj = RT::Date->new( $session{'CurrentUser'} );
+    $DateObj->Set(
+            Format => 'unknown',
+            Value  => $ARGS{'Value'}
+    ) if ($ARGS{'Value'});
+
+    my $obj = $ARGS{'Type'} . "Obj";
+    if ( ( ( defined $DateObj->Unix )
+            && ( $DateObj->Unix != $t->$obj()->Unix() )) || !$ARGS{'Value'}){
+        my $method = "Set".$ARGS{'Type'};
+        if ($ARGS{'Value'}){
+        ( $ret, $msg ) = $t->$method( $DateObj->ISO );
+        }else{
+    	    ( $ret, $msg ) = $t->$method("");
+        }
+
+    }
+    
+    use CGI;
+    my $p=new CGI;
+
+    if ($ret){
+        print $p->header(-type=>"text/plain", -Access_Control_Allow_Origin=>"*", -charset => 'utf-8')."OK";
+    }else{
+        print $p->header(-type=>"text/plain", -Access_Control_Allow_Origin=>"*", -charset => 'utf-8').$msg;
+    }
+}
+</%init>

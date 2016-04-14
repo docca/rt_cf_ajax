@@ -1,0 +1,20 @@
+% if ($CustomField && $User && $User->HasRight(Object => $CustomField,Right  => 'ModifyCustomField') && $CustomField->LookupType !~ /Transaction/){
+
+<span id="edit-<%$CustomField->id%>" style="right:0px;cursor:pointer;width:10px;hegith:10px;">
+    <img src="<%RT->Config->Get('WebPath')%>/NoAuth/images/pencil.png" >
+</span>
+    
+% }
+<%init>
+return unless ($CustomFieldId && $UserId);
+my $CustomField = RT::CustomField->new($RT::SystemUser);
+$CustomField->Load($CustomFieldId);
+my $User = RT::User->new($RT::SystemUser);
+$User->Load($UserId);
+</%init>
+<%args>
+$CustomFieldId => undef
+$UserId => undef
+</%args>
+    
+    

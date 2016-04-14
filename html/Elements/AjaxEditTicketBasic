@@ -1,0 +1,29 @@
+<%init>
+return unless ($ARGS{'Value'} && $ARGS{'TicketId'} && $ARGS{'Field'});
+
+my $t = RT::Ticket->new($session{'CurrentUser'});
+$t->Load($ARGS{'TicketId'});
+use CGI;
+my $p=new CGI;
+$ARGS{'Field'} = "Queue" if ($ARGS{'Field'} eq "Queue_inp");
+$ARGS{'Field'} = "Owner" if ($ARGS{'Field'} eq "Owner_inp");
+my $obj = $ARGS{'Field'}."Obj" if ($ARGS{'Field'} ne 'Priority');
+my $field = $ARGS{'Field'};
+if ($t && $t->Id && ((($field eq "Subject" || $field eq "Status") && $t->$field() ne $ARGS{'Value'}) || ($field ne "Subject" && $field ne "Status" && $obj && $t->$obj()->Name ne $ARGS{'Value'}) || $field eq 'Priority')){
+    $ARGS{'Value'} = RT->Config->Get('PriorityAsString')->{$ARGS{'Value'}} if ($field eq 'Priority');
+    $field = "Set".$ARGS{'Field'};
+    my ($ret, $msg);
+    if ($ARGS{'Field'} eq "Owner"){
+        ($ret, $msg) = $t->$field($ARGS{'Value'}, 'Force');
+    }else{
+	($ret, $msg) = $t->$field($ARGS{'Value'});
+	$t->SetFinalPriority($ARGS{'Value'}) if ($field eq 'SetPriority');
+    }
+
+    if ($ret){
+        print $p->header(-type=>"text/plain", -Access_Control_Allow_Origin=>"*", -charset => 'utf-8')."OK";
+    }else{
+	print $p->header(-type=>"text/plain", -Access_Control_Allow_Origin=>"*", -charset => 'utf-8').$msg;
+    }
+}
+</%init>
