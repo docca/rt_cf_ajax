@@ -11,11 +11,13 @@ RT::Extension::CRMfolderShowCustomFields
 
 =head1 DESCRIPTION
 
-CRMfolderXXX
+CRMfolderShowCustomFields
+
+This is a basic version, you can find some in-house code lines. We hope it would work on your system as well - it is working on our live RT, but this plugin is not tested on raw RT instance.
+Use it on your own risk.
 
 =head1 INSTALLATION AND CONFIGURATION
 
-THIS IS A BIANCO/TEMPLATE FOR CRMfolder PLUGIN
 
 1. Enable the Extension in the SiteConfig, eg.:
     Set(@Plugins, qw(RT::Extension::xyz RT::Extension::CRMfolderXXX));
